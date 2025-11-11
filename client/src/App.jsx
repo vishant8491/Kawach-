@@ -34,10 +34,8 @@ function App() {
             } 
           />
           <Route
-          path="/print/:fileId"
-          element={
-              <Print/>
-          }
+            path="/print/:fileId"
+            element={<Print/>}
           />
           <Route path="*" element={<Home/>} />
         </Route>

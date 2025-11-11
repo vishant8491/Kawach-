@@ -14,6 +14,7 @@ const GenerateQR = () => {
   const [qrGenerated, setQrGenerated] = useState(false);
   const [qrCode, setQrCode] = useState(null);
   const [qrCodeUrl, setQrCodeUrl] = useState(null);
+  const [printToken, setPrintToken] = useState(null); // Store the print token
   const [documentInfo, setDocumentInfo] = useState(null);
   const [timeLeft, setTimeLeft] = useState(60); // 1 minutes in seconds
   const [timerActive, setTimerActive] = useState(false);
@@ -87,8 +88,13 @@ const GenerateQR = () => {
 
       const { qrCode, fileName, uploadDate } = res.data;
       
+      // Extract token from QR code URL (format: http://localhost:5173/print/{token})
+      const qrUrl = res.data.fileUrl || ''; // This contains the token-based URL
+      const token = qrUrl.split('/print/')[1]; // Extract token from URL
+      
       // Set the new QR code
       setQrCode(qrCode);
+      setPrintToken(token); // Store the token for the Print Document button
       setDocumentInfo({
         name: fileName,
         uploadDate: new Date(uploadDate).toLocaleDateString(),
@@ -203,6 +209,17 @@ const GenerateQR = () => {
                       <p className="text-sm text-gray-400 mt-4">
                         This QR code will expire in {timeLeft} seconds. Please scan it before it expires.
                       </p>
+
+                      {/* Test Print Button */}
+                      <button
+                        onClick={() => navigate(`/print/${printToken}`)}
+                        className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg
+                                 hover:from-green-600 hover:to-emerald-600 transition-all duration-300
+                                 flex items-center justify-center space-x-2 font-semibold"
+                      >
+                        <span>🖨️</span>
+                        <span>Test Print Document</span>
+                      </button>
                     </div>
                   </div>
                 </div>
