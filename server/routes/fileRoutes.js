@@ -38,14 +38,20 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
 
         await newFile.save();
 
-        // Generate QR Code for the file URL
-        const qrCode = await generateQRCode(newFile._id, `${process.env.FRONTEND_URL}/print/${newFile._id}`);
+        // Generate QR Code with one-time token (valid for 60 minutes)
+        const qrCodeData = await generateQRCode(
+            newFile._id, 
+            process.env.FRONTEND_URL,
+            60  // Token validity in minutes
+        );
 
         res.status(200).send({
             success: true,
             message: "File uploaded successfully",
             fileId: newFile._id,
-            fileUrl: req.file.path
+            fileUrl: req.file.path,
+            printToken: qrCodeData.printToken,  // For debugging
+            expiresAt: qrCodeData.expiresAt     // For debugging
         });
     } catch (error) {
         console.error('Upload error:', error);
@@ -88,6 +94,7 @@ router.get('/qrcode/:fileId', isAuthenticated, async (req, res) => {
         res.status(200).send({
             success: true,
             qrCode: qrCode.qrCode,
+            fileUrl: qrCode.fileUrl, // The token-based print URL
             fileName: file.filename,
             uploadDate: file.uploadDate
         });

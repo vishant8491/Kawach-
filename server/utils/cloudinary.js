@@ -45,6 +45,35 @@ export const uploadQRCodeBuffer = async (buffer) => {
     }
 };
 
+// Generate a short-lived signed URL (optional security enhancement)
+export const generateSignedUrl = (publicId, expiresInSeconds = 3600) => {
+    try {
+        const timestamp = Math.round(Date.now() / 1000) + expiresInSeconds;
+        
+        // Determine resource type based on file extension or public_id pattern
+        let resourceType = 'image';
+        if (publicId.includes('uploads/')) {
+            // Check common document formats
+            if (publicId.match(/\.(pdf|doc|docx)$/i)) {
+                resourceType = 'raw';
+            }
+        }
+        
+        const signedUrl = cloudinary.url(publicId, {
+            sign_url: true,
+            type: 'authenticated',
+            resource_type: resourceType,
+            expires_at: timestamp
+        });
+        
+        console.log(`📝 Generated signed URL (expires in ${expiresInSeconds}s)`);
+        return signedUrl;
+    } catch (error) {
+        console.error('Error generating signed URL:', error);
+        throw error;
+    }
+};
+
 // Delete file from Cloudinary
 export const deleteFileFromCloudinary = async (publicId) => {
     try {
