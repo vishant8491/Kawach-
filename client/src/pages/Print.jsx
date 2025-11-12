@@ -334,28 +334,53 @@ const Print = () => {
             {blobUrl ? (
               <div className="bg-[#2a2235] p-2 rounded-md relative">
                 {isPDF ? (
-                  <iframe
-                    ref={iframeRef}
-                    src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                    className="w-full h-[500px] border-0 rounded pointer-events-none select-none"
-                    title="Document Preview"
-                    style={{ userSelect: 'none' }}
-                  />
+                  <>
+                    <iframe
+                      ref={iframeRef}
+                      src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+                      className="w-full h-[500px] border-0 rounded"
+                      title="Document Preview"
+                      style={{ 
+                        userSelect: 'none',
+                        pointerEvents: 'none'
+                      }}
+                      sandbox="allow-same-origin"
+                    />
+                    {/* Overlay to block all PDF interactions including toolbar */}
+                    <div 
+                      className="absolute inset-0 z-20"
+                      onContextMenu={(e) => e.preventDefault()}
+                      style={{ 
+                        cursor: 'default',
+                        background: 'transparent'
+                      }}
+                    />
+                  </>
                 ) : (
-                  <img
-                    src={blobUrl}
-                    alt="Document"
-                    className="w-full h-auto max-h-[500px] object-contain rounded select-none"
-                    style={{ userSelect: 'none', pointerEvents: 'none' }}
-                    draggable="false"
-                  />
+                  <>
+                    <img
+                      src={blobUrl}
+                      alt="Document"
+                      className="w-full h-auto max-h-[500px] object-contain rounded"
+                      style={{ 
+                        userSelect: 'none', 
+                        pointerEvents: 'none',
+                        WebkitUserSelect: 'none',
+                        MozUserSelect: 'none',
+                        msUserSelect: 'none'
+                      }}
+                      draggable="false"
+                      onContextMenu={(e) => e.preventDefault()}
+                    />
+                    {/* Overlay to prevent interactions */}
+                    <div 
+                      className="absolute inset-0 z-20"
+                      onContextMenu={(e) => e.preventDefault()}
+                      onDragStart={(e) => e.preventDefault()}
+                      style={{ cursor: 'default', background: 'transparent' }}
+                    />
+                  </>
                 )}
-                {/* Overlay to prevent interactions */}
-                <div 
-                  className="absolute inset-0 z-10"
-                  onContextMenu={(e) => e.preventDefault()}
-                  style={{ cursor: 'default' }}
-                />
               </div>
             ) : (
               <div className="bg-[#2a2235] p-8 rounded-md flex items-center justify-center h-[500px]">

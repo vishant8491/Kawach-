@@ -18,6 +18,25 @@
   }
 }
 
+/* Hide PDF viewer controls and buttons */
+@media screen {
+  iframe {
+    pointer-events: none !important;
+  }
+  
+  /* Hide PDF.js viewer toolbar */
+  #toolbarContainer,
+  #secondaryToolbar,
+  .toolbar,
+  #download,
+  #openFile,
+  #print,
+  #viewBookmark {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
 @keyframes slideTestimonial {
   0% {
     transform: translateX(100%);
