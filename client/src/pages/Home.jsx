@@ -9,7 +9,7 @@ import Testimonials from '../components/Testimonials';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const tl = gsap.timeline();
@@ -42,13 +42,21 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Logo and Project Name */}
-      <div className="flex items-center px-8 py-6">
+      <div className="flex items-center justify-between px-8 py-6">
         <div className="flex items-center space-x-3">
           <img src={logo} alt="Kawach Logo" className="w-12 h-12 logo-container" />
           <h1 className="project-title text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400">
             KAWACH
           </h1>
         </div>
+        {user && (
+          <button
+            onClick={logout}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition"
+          >
+            Logout
+          </button>
+        )}
       </div>
       {/* Hero Section */}
       <div className="relative overflow-hidden">

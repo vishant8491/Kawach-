@@ -13,6 +13,7 @@ const Print = () => {
   const [loading, setLoading] = useState(true);
   const [blobUrl, setBlobUrl] = useState(null);
   const [isPDF, setIsPDF] = useState(false);
+  const [autoPrintTriggered, setAutoPrintTriggered] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -27,10 +28,12 @@ const Print = () => {
     };
 
     const handleKeyDown = (e) => {
+      // Block Ctrl+S (save), Ctrl+P (print manually), F12, DevTools shortcuts
       if ((e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
-          (e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'c' || e.key === 'v')) ||
+          (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P' || e.key === 'c' || e.key === 'v')) ||
           e.key === 'F12') {
         e.preventDefault();
+        toast.error('This action is not allowed');
         return false;
       }
     };
@@ -65,6 +68,15 @@ const Print = () => {
           const url = URL.createObjectURL(blob);
           setBlobUrl(url);
           console.log('✅ Document ready for display');
+          
+          // Auto-trigger print after a short delay (for QR scan scenario)
+          setTimeout(() => {
+            if (!autoPrintTriggered) {
+              setAutoPrintTriggered(true);
+              console.log('🖨️ Auto-triggering print dialog...');
+              triggerAutoPrint(url, file.mimetype, file.filename);
+            }
+          }, 1500); // 1.5 second delay to ensure everything is loaded
           
         } else {
           toast.error(response.data.message || 'Failed to load document');
@@ -110,6 +122,91 @@ const Print = () => {
       }
     };
   }, [token, navigate]);
+
+  // Auto-print function for QR scan (works on all devices)
+  const triggerAutoPrint = (url, mimetype, filename) => {
+    try {
+      const isPDFFile = mimetype === 'application/pdf';
+      
+      // Mobile/Tablet detection
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // For mobile devices, open print-optimized page
+        toast.success('Document loaded! Tap Print button below', { duration: 3000 });
+        return; // Don't auto-print on mobile, let user tap the button
+      }
+      
+      // Desktop auto-print
+      if (isPDFFile && iframeRef.current) {
+        // PDF - use iframe
+        setTimeout(() => {
+          iframeRef.current.contentWindow.print();
+        }, 500);
+      } else {
+        // Images - use print window
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+        if (!printWindow) {
+          toast.error('Please allow popups for auto-print');
+          return;
+        }
+
+        const currentDate = new Date().toLocaleString();
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Print - ${filename}</title>
+            <style>
+              @media print {
+                @page { margin: 0; }
+                body { 
+                  margin: 0;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+              }
+              body { 
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                background: #000;
+              }
+              img { 
+                max-width: 100%;
+                height: auto;
+                display: block;
+              }
+              .watermark {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-45deg);
+                font-size: 48px;
+                color: rgba(128, 128, 128, 0.15);
+                white-space: nowrap;
+                pointer-events: none;
+                z-index: 1000;
+                font-weight: bold;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="watermark">KAWACH • ${currentDate}</div>
+            <img src="${url}" alt="Document" onload="setTimeout(() => { window.print(); window.onafterprint = () => window.close(); }, 500);" />
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    } catch (error) {
+      console.error('Auto-print error:', error);
+      toast.error('Auto-print failed. Use Print button below.');
+    }
+  };
 
   const handlePrint = async () => {
     if (!blobUrl) {
@@ -235,21 +332,30 @@ const Print = () => {
             </h2>
             
             {blobUrl ? (
-              <div className="bg-[#2a2235] p-2 rounded-md">
+              <div className="bg-[#2a2235] p-2 rounded-md relative">
                 {isPDF ? (
                   <iframe
                     ref={iframeRef}
-                    src={blobUrl}
-                    className="w-full h-[500px] border-0 rounded"
+                    src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                    className="w-full h-[500px] border-0 rounded pointer-events-none select-none"
                     title="Document Preview"
+                    style={{ userSelect: 'none' }}
                   />
                 ) : (
                   <img
                     src={blobUrl}
                     alt="Document"
-                    className="w-full h-auto max-h-[500px] object-contain rounded"
+                    className="w-full h-auto max-h-[500px] object-contain rounded select-none"
+                    style={{ userSelect: 'none', pointerEvents: 'none' }}
+                    draggable="false"
                   />
                 )}
+                {/* Overlay to prevent interactions */}
+                <div 
+                  className="absolute inset-0 z-10"
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{ cursor: 'default' }}
+                />
               </div>
             ) : (
               <div className="bg-[#2a2235] p-8 rounded-md flex items-center justify-center h-[500px]">
@@ -306,6 +412,14 @@ const Print = () => {
                 ⚠️ <strong>One-Time Access:</strong> This link will expire after printing or after 60 minutes.
               </p>
             </div>
+
+            {autoPrintTriggered && (
+              <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-4">
+                <p className="text-sm text-green-200 text-center">
+                  ✅ <strong>Auto-Print Triggered:</strong> Print dialog should open automatically on desktop.
+                </p>
+              </div>
+            )}
 
             <div className="bg-[#251934] p-4 rounded-lg">
               <h3 className="text-sm font-semibold mb-2 text-purple-300">🔐 Security Features</h3>

@@ -3,6 +3,21 @@
 @tailwind utilities;
 
 
+/* Prevent text selection and copy on print page */
+@layer utilities {
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  .no-download {
+    pointer-events: none;
+  }
+}
+
 @keyframes slideTestimonial {
   0% {
     transform: translateX(100%);
