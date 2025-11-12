@@ -334,37 +334,36 @@ const Print = () => {
             {blobUrl ? (
               <div className="bg-[#2a2235] p-2 rounded-md relative">
                 {isPDF ? (
-                  <>
+                  <div className="relative">
                     <iframe
                       ref={iframeRef}
                       src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
                       className="w-full h-[500px] border-0 rounded"
                       title="Document Preview"
                       style={{ 
-                        userSelect: 'none',
-                        pointerEvents: 'none'
+                        userSelect: 'none'
                       }}
-                      sandbox="allow-same-origin"
                     />
-                    {/* Overlay to block all PDF interactions including toolbar */}
+                    {/* Transparent overlay to block right-click and interactions but allow viewing */}
                     <div 
-                      className="absolute inset-0 z-20"
+                      className="absolute inset-0"
                       onContextMenu={(e) => e.preventDefault()}
+                      onMouseDown={(e) => e.preventDefault()}
                       style={{ 
                         cursor: 'default',
-                        background: 'transparent'
+                        background: 'transparent',
+                        pointerEvents: 'auto'
                       }}
                     />
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="relative">
                     <img
                       src={blobUrl}
                       alt="Document"
                       className="w-full h-auto max-h-[500px] object-contain rounded"
                       style={{ 
-                        userSelect: 'none', 
-                        pointerEvents: 'none',
+                        userSelect: 'none',
                         WebkitUserSelect: 'none',
                         MozUserSelect: 'none',
                         msUserSelect: 'none'
@@ -372,14 +371,15 @@ const Print = () => {
                       draggable="false"
                       onContextMenu={(e) => e.preventDefault()}
                     />
-                    {/* Overlay to prevent interactions */}
+                    {/* Overlay to prevent interactions but allow viewing */}
                     <div 
-                      className="absolute inset-0 z-20"
+                      className="absolute inset-0"
                       onContextMenu={(e) => e.preventDefault()}
                       onDragStart={(e) => e.preventDefault()}
+                      onMouseDown={(e) => e.preventDefault()}
                       style={{ cursor: 'default', background: 'transparent' }}
                     />
-                  </>
+                  </div>
                 )}
               </div>
             ) : (
