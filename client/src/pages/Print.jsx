@@ -14,8 +14,13 @@ const Print = () => {
   const [blobUrl, setBlobUrl] = useState(null);
   const [isPDF, setIsPDF] = useState(false);
   const [autoPrintTriggered, setAutoPrintTriggered] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
+    // Detect mobile device on mount
+    const checkMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setIsMobileDevice(checkMobile);
+    
     if (!token) {
       toast.error('No document selected');
       navigate('/');
@@ -334,25 +339,32 @@ const Print = () => {
             {blobUrl ? (
               <div className="bg-[#2a2235] p-2 rounded-md relative">
                 {isPDF ? (
-                  <div className="relative">
-                    <iframe
-                      ref={iframeRef}
-                      src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                      className="w-full h-[500px] border-0 rounded"
-                      title="Document Preview"
-                      style={{ 
-                        userSelect: 'none'
+                  <div className="relative w-full h-[500px] bg-gray-800 rounded overflow-hidden">
+                    {/* PDF Embed with no controls */}
+                    <embed
+                      src={`${blobUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&zoom=100`}
+                      type="application/pdf"
+                      className="w-full h-full"
+                      style={{
+                        border: 'none',
+                        display: 'block'
                       }}
                     />
-                    {/* Transparent overlay to block right-click and interactions but allow viewing */}
+                    {/* Hidden iframe for printing */}
+                    <iframe
+                      ref={iframeRef}
+                      src={blobUrl}
+                      style={{ display: 'none' }}
+                      title="Print Frame"
+                    />
+                    {/* Overlay to block toolbar interactions */}
                     <div 
-                      className="absolute inset-0"
+                      className="absolute top-0 left-0 right-0 h-12 bg-transparent"
                       onContextMenu={(e) => e.preventDefault()}
-                      onMouseDown={(e) => e.preventDefault()}
                       style={{ 
                         cursor: 'default',
-                        background: 'transparent',
-                        pointerEvents: 'auto'
+                        pointerEvents: 'auto',
+                        zIndex: 10
                       }}
                     />
                   </div>
@@ -425,12 +437,20 @@ const Print = () => {
               className={`w-full py-4 px-6 rounded-lg transition-all duration-300
                        flex items-center justify-center space-x-2 font-semibold
                        ${blobUrl 
-                         ? 'bg-gradient-to-r from-cyan-400 to-purple-500 hover:from-cyan-500 hover:to-purple-600' 
+                         ? 'bg-gradient-to-r from-cyan-400 to-purple-500 hover:from-cyan-500 hover:to-purple-600 text-lg' 
                          : 'bg-gray-600 cursor-not-allowed'}`}
             >
-              <FaPrint className="text-xl" />
-              <span>{blobUrl ? 'Print Document' : 'Loading...'}</span>
+              <FaPrint className="text-2xl" />
+              <span>{blobUrl ? (isMobileDevice ? 'Print Document (Tap Here)' : 'Print Document') : 'Loading...'}</span>
             </button>
+
+            {isMobileDevice && blobUrl && (
+              <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
+                <p className="text-sm text-blue-200 text-center">
+                  📱 <strong>Mobile Device Detected:</strong> Tap the Print button above to open your device's print dialog. You can then select a connected printer or save as PDF.
+                </p>
+              </div>
+            )}
 
             <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4">
               <p className="text-sm text-yellow-200 text-center">
@@ -438,7 +458,7 @@ const Print = () => {
               </p>
             </div>
 
-            {autoPrintTriggered && (
+            {autoPrintTriggered && !isMobileDevice && (
               <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-4">
                 <p className="text-sm text-green-200 text-center">
                   ✅ <strong>Auto-Print Triggered:</strong> Print dialog should open automatically on desktop.

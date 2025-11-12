@@ -18,18 +18,39 @@
   }
 }
 
-/* Hide PDF viewer controls and buttons (but keep document visible) */
-@media screen {
-  /* Hide PDF.js viewer toolbar */
-  #toolbarContainer,
-  #secondaryToolbar,
-  .toolbar,
-  #download,
-  #openFile,
-  #viewBookmark {
-    display: none !important;
-    visibility: hidden !important;
-  }
+/* Forcefully hide PDF viewer controls */
+embed[type="application/pdf"],
+object[type="application/pdf"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Hide Chrome PDF viewer buttons */
+embed::-webkit-pdf-viewer-controls,
+embed::-webkit-pdf-plugin {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Hide all PDF toolbar elements */
+#pdf-toolbar,
+.pdf-toolbar,
+#toolbarContainer,
+#secondaryToolbar,
+.toolbar,
+#download,
+#openFile,
+#print,
+#viewBookmark,
+[aria-label="Download"],
+[aria-label="Save"],
+[title="Download"],
+[title="Save"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 @keyframes slideTestimonial {
